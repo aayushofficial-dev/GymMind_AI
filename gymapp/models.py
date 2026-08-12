@@ -95,7 +95,7 @@ class Payment(models.Model):
         null=True, blank=True,
         related_name='payments'
     )
-    amount = models.DecimalField(max_length=8, decimal_places=2)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
     payment_date = models.DateField(default=timezone.now)
     mode = models.CharField(max_length=50, choices=PAYMENT_MODE_CHOICES)
     status = models.CharField(max_length=50, choices=PAYMENT_STATUS_CHOICES)
