@@ -105,4 +105,35 @@ class Payment(models.Model):
         return f"Payment of ${self.amount} by {self.member.full_name} on {self.payment_date}"
 
 class Attendance(models.Model):
+    member = models.ForeignKey(
+        MemberProfile,
+        on_delete=models.CASCADE,
+        related_name='attendances'
+    )
+    date = models.DateField(default=timezone.now)
+    time_in = models.TimeField(null=True, blank=True) # time when member checked in 
+
+    class Meta:
+        unique_together = ('member', 'date') # ensure one attendance record per member per day
+
+    def __str__(self):
+        return f"{self.member.full_name} - {self.date} - {self.time_in}"
+
+class Enquiry(models.Model):
+    ENUIQRY_STATUS_CHOICES = (
+        ('NEW', 'New'),
+        ('SEEN', 'Seen'),
+        ('RESOLVED', 'Resolved')
+    )
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    mobile = models.CharField(max_length=15)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=ENUIQRY_STATUS_CHOICES, default='NEW')
+
+    def __str__(self):
+        return f"Enuiqry from {self.name} - {self.email} - Status: {self.status}"
+
+class WorkoutPlan(models.Model):
     pass
