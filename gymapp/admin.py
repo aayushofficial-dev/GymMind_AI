@@ -15,3 +15,4 @@ class MemberProfileAdmin(admin.ModelAdmin):
     list_display = ['full_name', 'user', 'mobile', 'plan', 'join_date']
     search_fields = ['full_name', 'user__username', 'mobile']
     list_filter = ['plan', 'join_date']
+
