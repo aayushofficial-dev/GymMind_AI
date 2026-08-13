@@ -159,5 +159,3 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"Feedback from {self.member.full_name} - Created at: {self.created_at}"
-
-    
