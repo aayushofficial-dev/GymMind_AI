@@ -6,7 +6,7 @@ from .models import *
 
 class UserAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('Role Info', {'fields': ('roles',)}),
+        ('Role Info', {'fields': ('role',)}),
     )
     list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'is_staff']
     list_filter = ['role', 'is_staff', 'is_superuser', 'is_active']
