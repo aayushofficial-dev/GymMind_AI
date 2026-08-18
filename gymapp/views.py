@@ -69,4 +69,60 @@ def logout_view(request):
     messages.success(request, 'Logged out successfully!')
     return redirect('home') # Redirect to the home page after logout
 
+@admin_required
+def admin_plans_list(request):
+    plans = MembershipPlan.objects.all().order_by('duration_months') # Fetch all membership plans from the database and order them by duration months
+    return render(request, 'admin_plans_list.html', {'plans': plans})
 
+@admin_required
+def admin_plan_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        duration_months = request.POST.get('duration_months')
+        fee = request.POST.get('fee')
+        description = request.POST.get('description')
+
+        if name and duration_months and fee:
+            MembershipPlan.objects.create(
+                name=name,
+                duration_months=duration_months,
+                fee=fee,
+                description=description
+            )
+            messages.success(request, 'Membership Plan added successfully!')
+            return redirect('admin_plans_list') # Redirect to the plans list after successfull addition
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
+
+    return render(request, 'admin_plan_form.html', {'mode':'add'}) # Pass mode to the template to indicate it's an add operation
+
+@admin_required
+def admin_plan_edit(request, plan_id):
+    plan = MembershipPlan.objects.get(id=plan_id) # Fetch the specific membership plan based on the provided ID
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        duration_months = request.POST.get('duration_months')
+        fee = request.POST.get('fee')
+        description = request.POST.get('description')
+
+        if name and duration_months and fee:
+            plan.name = name
+            plan.duration_months = duration_months
+            plan.fee = fee
+            plan.description = description
+            plan.save() # Save the updated plan details tp the database
+            messages.success(request, 'Membership plan updated successfully!')
+            return redirect('admin_plans_list') # Redirect to the plans list after successfull update
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
+    return render(request, 'admin_plan_form.html', {'plan': plan, 'mode':'edit'}) # Pass mode to the template to indicate it's an edit operation
+
+@admin_required
+def admin_plan_delete(request, plan_id):
+    plan = MembershipPlan.objects.get(id=plan_id) # fetch the specific membership plan based on the provided ID
+    if request.method == 'POST':
+        plan.delete() # delete the plan from the database
+        messages.success(request, 'Membership plan deleted successfully!')
+        return redirect('admin_plans_list') # Redirect to the plans list after successfull deletion
+    return redirect('admin_plans_list') # Render a confirmation page before deletion
