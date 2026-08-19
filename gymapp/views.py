@@ -145,42 +145,43 @@ def admin_trainer_add(request):
                 name=name,
                 mobile=mobile,
                 specialization=specialization,
-                shift_timing=shift_timing
+                shift_timing=shift_timing,
             )
             messages.success(request, 'Trainer added successfully!')
-            return redirect('admin_trainers_list') # Redirect to the trainers list after successfull addition
+            return redirect('admin_trainers_list') # Redirect to the trainer list after successfull addition
         else:
-            messages.error(request, 'Please fill in all the required fields.')
-
+            messages.error('Please fill in all the required fields.')
     return render(request, 'admin_trainer_form.html', {'mode':'add'}) # Pass mode to the template to indicate it's an add operation
 
 @admin_required
-def admin_trainer_edit(request, trainer_id):    
+def admin_trainer_edit(request, trainer_id):
     trainer = Trainer.objects.get(id=trainer_id) # Fetch the specific trainer based on the provided ID
 
     if request.method == 'POST':
         name = request.POST.get('name')
         mobile = request.POST.get('mobile')
-        specialization = request.POST.get('specialization')
+        specilization = request.POST.get('specialization')
         shift_timing = request.POST.get('shift_timing')
 
-        if name and mobile and specialization and shift_timing:
+        if name and mobile and specilization and shift_timing:
             trainer.name = name
             trainer.mobile = mobile
-            trainer.specialization = specialization
+            trainer.specialization = specilization
             trainer.shift_timing = shift_timing
-            trainer.save() # Save the updated trainer details to the database
+            trainer.save() # save the updated trainer details to the database
             messages.success(request, 'Trainer updated successfully!')
-            return redirect('admin_trainers_list') # Redirect to the trainers list after successfull update
+            return redirect('admin_trainers_list') # Redirect to the trainer list after successfull update
         else:
             messages.error(request, 'Please fill in all the required fields.')
-    return render(request, 'admin_trainer_form.html', {'trainer': trainer, 'mode':'edit'}) # Pass mode to the template to indicate it's an edit operation
+
+    return render(request, 'admin_trainer_form.html', {'trainer':trainer, 'mode':'edit'}) # Pass mode to the template to indicate it's and edit operation
 
 @admin_required
 def admin_trainer_delete(request, trainer_id):
-    trainer = Trainer.objects.get(id=trainer_id) # fetch the specific trainer based on the provided ID
+    trainer = Trainer.objects.get(id=trainer_id)
     if request.method == 'POST':
         trainer.delete() # delete the trainer from the database
         messages.success(request, 'Trainer deleted successfully!')
         return redirect('admin_trainers_list') # Redirect to the trainers list after successfull deletion
-    return redirect('admin_trainers_list') # Render a confirmation page before deletion 
+    return redirect('admin_trainers_list') # Render a confirmation page before deletion
+

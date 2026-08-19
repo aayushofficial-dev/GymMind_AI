@@ -17,6 +17,10 @@ urlpatterns = [
     path('admin_trainers/', admin_trainers_list, name='admin_trainers_list'),
     path('admin_trainers_add/', admin_trainer_add, name='admin_trainer_add'),
     path('admin_trainers_edit/<int:trainer_id>/', admin_trainer_edit, name='admin_trainer_edit'),
-    path('admin_trainers_delete/<int:trainer_id>/', admin_trainer_delete, name='admin_trainer_delete'),   
+    path('admin_trainers_delete/<int:trainer_id>/', admin_trainer_delete, name='admin_trainer_delete'),
 
+    # path(),
+    # path(),
+    # path(),
+    # path(),
 ]
