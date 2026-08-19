@@ -19,8 +19,8 @@ urlpatterns = [
     path('admin_trainers_edit/<int:trainer_id>/', admin_trainer_edit, name='admin_trainer_edit'),
     path('admin_trainers_delete/<int:trainer_id>/', admin_trainer_delete, name='admin_trainer_delete'),
 
-    # path(),
-    # path(),
-    # path(),
-    # path(),
+    path('admin_members/', admin_members_list, name='admin_members_list'),
+    path('admin_members_add/', admin_member_add, name='admin_member_add'),
+    path('admin_members_edit/<int:member_id>/', admin_member_edit, name='admin_member_edit'),
+    path('admin_members_delete/<int:member_id>/', admin_member_delete, name='admin_member_delete'),
 ]
