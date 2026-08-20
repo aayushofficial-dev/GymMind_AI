@@ -281,5 +281,5 @@ def admin_member_delete(request, membet_id):
         member.delete() # delete the member profile from the database
         messages.success(request, 'Member deleted successfully!')
         return redirect('admin_members_list')
-    return render(request, 'admin_member_confirm_delete.html', {'member': member})
+    return redirect('admin_members_list')
 
