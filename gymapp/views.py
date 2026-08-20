@@ -234,7 +234,7 @@ def admin_member_add(request):
         )
         messages.success(request, 'Member added successfully!')
         return redirect('admin_members_list')
-    return render(request, 'admin_member_form_html', {'plans': plans, 'trainers': trainers, 'mode':'add'}) # pass mdoe to the template to indicate it's an add operation
+    return render(request, 'admin_member_form', {'plans': plans, 'trainers': trainers, 'mode':'add'}) # pass mdoe to the template to indicate it's an add operation
 
 @admin_required
 def admin_member_edit(request, member_id):
