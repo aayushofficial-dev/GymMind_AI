@@ -239,6 +239,7 @@ def admin_member_add(request):
 @admin_required
 def admin_member_edit(request, member_id):
     member = MemberProfile.objects.get(id=member_id)
+
     plans = MembershipPlan.objects.all().order_by('duration_months')
     trainers = Trainer.objects.all().order_by('name')
 
@@ -248,33 +249,54 @@ def admin_member_edit(request, member_id):
         age = request.POST.get('age')
         gender = request.POST.get('gender')
         address = request.POST.get('address')
-        join_date = request.POST.get('join_date') or member.join_date # Default to existing join_date if not provided
+        join_date = request.POST.get('join_date') or member.join_date
+
         plan_id = request.POST.get('plan_id')
         trainer_id = request.POST.get('trainer_id')
 
         plan = MembershipPlan.objects.get(id=plan_id) if plan_id else None
         trainer = Trainer.objects.get(id=trainer_id) if trainer_id else None
 
-        if full_name and mobile and age and gender and address and join_date and plan and trainer:
+        if full_name and mobile and age and gender and address and join_date:
+
             member.full_name = full_name
             member.mobile = mobile
-            member.age = age 
+            member.age = age
             member.gender = gender
             member.address = address
             member.join_date = join_date
             member.plan = plan
             member.trainer = trainer
-            member.save()
-            messages.success(request, 'Member updated successfully!')
-            return redirect('admin_members_list')
-        else:
-            messages.error(request, 'Please fill in all the required fields.')
 
-    return render(request, 'admin_member_form.html', {'member': member, 'plans':plans, 'trainers': trainers, 'mode': 'edit'})
+            member.save()
+
+            messages.success(
+                request,
+                'Member updated successfully!'
+            )
+
+            return redirect('admin_members_list')
+
+        else:
+            messages.error(
+                request,
+                'Please fill in all the required fields.'
+            )
+
+    return render(
+        request,
+        'admin_member_form.html',
+        {
+            'member': member,
+            'plans': plans,
+            'trainers': trainers,
+            'mode': 'edit'
+        }
+    )
 
 @admin_required
-def admin_member_delete(request, membet_id):
-    member = MemberProfile.objects.get(id=membet_id)
+def admin_member_delete(request, member_id):
+    member = MemberProfile.objects.get(id=member_id)
     if request.method == 'POST':
         user = member.user # get the associated user
         user.delete() # delete the user, which will also delete the associated memberprofile due
