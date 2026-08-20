@@ -311,17 +311,20 @@ def admin_attendance_list(request):
     date = request.GET.get('date', today)
 
     attendances = Attendance.objects.all().select_related('member').filter(date=date)
+
     members = MemberProfile.objects.all().order_by('full_name')
+
     member_id = request.GET.get('member_id')
 
     if member_id:
         attendances = attendances.filter(member_id=member_id)
+
     return render(request, 'admin_attendance_list.html', {
-        'attendances':attendances,
+        'attendances': attendances,
         'members': members,
         'today': today,
-        'selected_member_id':member_id,
-        'selected_date':date,
+        'selected_member_id': member_id,
+        'selected_date': date,
     })
 
 @admin_required
@@ -340,75 +343,18 @@ def admin_attendance_add(request):
         member = MemberProfile.objects.get(id=member_id)
 
         attendance, created = Attendance.objects.get_or_create(
-            member=member, date=date, time_in=time_in
+            member=member,
+            date=date,
+            time_in=time_in
         )
 
         if not created:
             attendance.time_in = time_in
             attendance.save()
             messages.info(request, 'Attendance updated successfully.')
-        messages.success(request, 'Attendance recorded successfully.')
-    return render(request, 'admin_attendance_form.html', {'members':members,})
-
-@admin_required
-def admin_equipment_list(request):
-    search = request.GET.get('search', '')
-
-    equipments = Equipment.objects.all().order_by('name') # order equipment by name 
-
-    if search:
-        equipments = equipments.filter(name__icontains=search)
-    return render(request, 'admin_equipment_list.html', {'equipments': equipments, 'search':search})
-
-@admin_required
-def admin_equipment_add(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        units = request.POST.get('units')
-        price = request.POST.get('price')
-        purchase_date = request.POST.get('purchase_date') or timezone.now().date()
-
-        if name and units and price:
-            Equipment.objects.create(
-                name=name,
-                units=units,
-                price=price,
-                purchase_date=purchase_date
-            )
-            messages.success(request, 'Equipment added successfully!')
-            return redirect('admin_equipment_list')
         else:
-            messages.error(request, 'Please fill in all required fields.')
-    return render(request, 'admin_euipment_form.html', {'mode':'add'})
+            messages.success(request, 'Attendance recorded successfully.')
 
-@admin_required
-def admin_equipment_edit(request, member_id):
-    equipment = Equipment.objects.get(id=member_id)
-
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        units = request.POST.get('units')
-        price = request.POST.get('price')
-        purchase_date = request.POST.get('purchase_date') or equipment.purchase_date
-
-        if name and units and price and purchase_date:
-            equipment.name = name
-            equipment.units = units
-            equipment.price = price
-            equipment.purchase_date = purchase_date
-            equipment.save()
-            messages.success(request, 'Equipment updated successfully!')
-            return redirect('admin_equipment_list')
-        else:
-            messages.error(request, 'Please fill in all the required fields')
-    return render(request, 'admin_equipment_form.html', {'equipment':equipment, 'mode':'edit'})
-
-@admin_required
-def admin_equipment_delete(request, member_id):
-    equipment = Equipment.objects.get(id=member_id)
-    if request.method == 'POST':
-        equipment.delete()
-        messages.success(request, 'Equipment deleted successfully!')
-        return redirect('admin_equipment_list')
-    return redirect('admin_equipment_list', {'equipment':equipment})
-
+    return render(request, 'admin_attendance_form.html', {
+        'members': members,
+    })

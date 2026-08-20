@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Attendance</h2>
+    <a href="{% url 'admin_attendance_add' %}" class="btn btn-primary">Mark Attendance</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="search" class="form-control" placeholder="Search members..." value="{{ search }}">
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-secondary">Search</button>
+    </div>
+</form>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>FullName</th>
+            <th>Username</th>
+            <th>Mobile</th>
+            <th>Plan</th>
+            <th>Join Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attendance in attendances %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ attendance.member.name }}</td>
+            <td>{{ attendance.member.user.username }}</td>
+            <td>{{ attendance.member.mobile }}</td>
+            <td>{{ attendance.member.plan.name|default:"No Plan Assigned" }}</td>
+            <td>{{ attendance.member.join_date }}</td>
+            <td>
+                <a href="{% url 'admin_member_edit' attendance.member.id %}" class="btn btn-sm btn-warning">Edit</a>
+                <form method="post" action="{% url 'admin_member_delete' attendance.member.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this member?');">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">No attendances available.</td>
+        </tr>
+        {% endfor %}
+</table>
+{% endblock %}
