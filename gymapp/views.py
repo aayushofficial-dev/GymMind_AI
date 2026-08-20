@@ -307,54 +307,62 @@ def admin_member_delete(request, member_id):
 
 @admin_required
 def admin_attendance_list(request):
-    today = timezone.now().date()
-    date = request.GET.get('date', today)
-
-    attendances = Attendance.objects.all().select_related('member').filter(date=date)
-
-    members = MemberProfile.objects.all().order_by('full_name')
-
-    member_id = request.GET.get('member_id')
-
-    if member_id:
-        attendances = attendances.filter(member_id=member_id)
-
-    return render(request, 'admin_attendance_list.html', {
-        'attendances': attendances,
-        'members': members,
-        'today': today,
-        'selected_member_id': member_id,
-        'selected_date': date,
-    })
+    attendances = Attendance.objects.all().select_related('member') 
+    return render(request, 'admin_attendance_list.html', {'attendances': attendances})
 
 @admin_required
 def admin_attendance_add(request):
-    members = MemberProfile.objects.all().order_by('full_name')
+    members = MemberProfile.objects.all().order_by('full_name') 
+
 
     if request.method == 'POST':
         member_id = request.POST.get('member_id')
-        date = request.POST.get('date')
+        date = request.POST.get('date') or timezone.now().date() # Default today's date if not provided
         time_in = request.POST.get('time_in')
 
-        if not member_id:
-            messages.error(request, 'Please select a member.')
-            return redirect('admin_attendance_add')
+        member = MemberProfile.objects.get(id=member_id) if member_id else None
 
-        member = MemberProfile.objects.get(id=member_id)
+        if not member_id:
+            messages.error(request, "Please select a member.")
+            return redirect('admin_attendance_add') 
+
+        member = MemberProfile.objects.get(id=member_id) 
 
         attendance, created = Attendance.objects.get_or_create(
-            member=member,
-            date=date,
-            time_in=time_in
-        )
+            member=member, date=date, time_in=time_in)
 
         if not created:
             attendance.time_in = time_in
             attendance.save()
-            messages.info(request, 'Attendance updated successfully.')
-        else:
-            messages.success(request, 'Attendance recorded successfully.')
+            messages.info(request, "Attendance updated successfully!")
+            messages.success(request, 'Attendance recorded successfully!')
+            return redirect('admin_attendance_form.html', {'members': member})
 
-    return render(request, 'admin_attendance_form.html', {
-        'members': members,
-    })
+        @admin_required
+        def admin_equipment_list(request):
+            equipments = Equipment.objects.all().order_by('name') 
+            return render(request, 'admin_equipment_list.html', {'equipments': equipments})
+
+        @admin_required
+        def admin_equipment_add(request):
+            if request.method == 'POST':
+                name = request.POST.get('name')
+                units = request.POST.get('units')
+                price = request.POST.get('price')
+                purchase_date = request.POST.get('purchase_date') or timezone.now().date() # Default today's date if not provided
+
+                if name and units and price:
+                    Equipment.objects.create(
+                        name=name,
+                        units=units,
+                        price=price,
+                        purchase_date=purchase_date
+                    )
+                    messages.success(request, 'Equipment added successfully!')
+                    return redirect('admin_equipment_list.html') 
+                else:
+                    messages.error(request, 'Please fill in all the required fields.')
+
+            return render(request, 'admin_equipment_form.html', {'mode': 'add'})
+                        
+                   
