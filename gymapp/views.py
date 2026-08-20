@@ -270,7 +270,7 @@ def admin_member_edit(request, member_id):
         else:
             messages.error(request, 'Please fill in all the required fields.')
 
-    return render(request, 'admin_member_form_html', {'member': member, 'plans':plans, 'trainers': trainers, 'mode': 'edit'})
+    return render(request, 'admin_member_form.html', {'member': member, 'plans':plans, 'trainers': trainers, 'mode': 'edit'})
 
 @admin_required
 def admin_member_delete(request, membet_id):
