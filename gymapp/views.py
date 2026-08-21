@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Equipment
 
 from gymapp.models import *
 
@@ -69,4 +70,299 @@ def logout_view(request):
     messages.success(request, 'Logged out successfully!')
     return redirect('home') # Redirect to the home page after logout
 
+@admin_required
+def admin_plans_list(request):
+    plans = MembershipPlan.objects.all().order_by('duration_months') # Fetch all membership plans from the database and order them by duration months
+    return render(request, 'admin_plans_list.html', {'plans': plans})
 
+@admin_required
+def admin_plan_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        duration_months = request.POST.get('duration_months')
+        fee = request.POST.get('fee')
+        description = request.POST.get('description')
+
+        if name and duration_months and fee:
+            MembershipPlan.objects.create(
+                name=name,
+                duration_months=duration_months,
+                fee=fee,
+                description=description
+            )
+            messages.success(request, 'Membership Plan added successfully!')
+            return redirect('admin_plans_list') # Redirect to the plans list after successfull addition
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
+
+    return render(request, 'admin_plan_form.html', {'mode':'add'}) # Pass mode to the template to indicate it's an add operation
+
+@admin_required
+def admin_plan_edit(request, plan_id):
+    plan = MembershipPlan.objects.get(id=plan_id) # Fetch the specific membership plan based on the provided ID
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        duration_months = request.POST.get('duration_months')
+        fee = request.POST.get('fee')
+        description = request.POST.get('description')
+
+        if name and duration_months and fee:
+            plan.name = name
+            plan.duration_months = duration_months
+            plan.fee = fee
+            plan.description = description
+            plan.save() # Save the updated plan details tp the database
+            messages.success(request, 'Membership plan updated successfully!')
+            return redirect('admin_plans_list') # Redirect to the plans list after successfull update
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
+    return render(request, 'admin_plan_form.html', {'plan': plan, 'mode':'edit'}) # Pass mode to the template to indicate it's an edit operation
+
+@admin_required
+def admin_plan_delete(request, plan_id):
+    plan = MembershipPlan.objects.get(id=plan_id) # fetch the specific membership plan based on the provided ID
+    if request.method == 'POST':
+        plan.delete() # delete the plan from the database
+        messages.success(request, 'Membership plan deleted successfully!')
+        return redirect('admin_plans_list') # Redirect to the plans list after successfull deletion
+    return redirect('admin_plans_list') # Render a confirmation page before deletion
+
+@admin_required
+def admin_trainers_list(request):
+    trainers = Trainer.objects.all().order_by('name') # Fetch all trainers from the database and order them by name
+    return render(request, 'admin_trainers_list.html', {'trainers': trainers})
+
+@admin_required
+def admin_trainer_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        mobile = request.POST.get('mobile')
+        specialization = request.POST.get('specialization')
+        shift_timing = request.POST.get('shift_timing')
+
+        if name and mobile and specialization and shift_timing:
+            Trainer.objects.create(
+                name=name,
+                mobile=mobile,
+                specialization=specialization,
+                shift_timing=shift_timing,
+            )
+            messages.success(request, 'Trainer added successfully!')
+            return redirect('admin_trainers_list') # Redirect to the trainer list after successfull addition
+        else:
+            messages.error('Please fill in all the required fields.')
+    return render(request, 'admin_trainer_form.html', {'mode':'add'}) # Pass mode to the template to indicate it's an add operation
+
+@admin_required
+def admin_trainer_edit(request, trainer_id):
+    trainer = Trainer.objects.get(id=trainer_id) # Fetch the specific trainer based on the provided ID
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        mobile = request.POST.get('mobile')
+        specilization = request.POST.get('specialization')
+        shift_timing = request.POST.get('shift_timing')
+
+        if name and mobile and specilization and shift_timing:
+            trainer.name = name
+            trainer.mobile = mobile
+            trainer.specialization = specilization
+            trainer.shift_timing = shift_timing
+            trainer.save() # save the updated trainer details to the database
+            messages.success(request, 'Trainer updated successfully!')
+            return redirect('admin_trainers_list') # Redirect to the trainer list after successfull update
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
+
+    return render(request, 'admin_trainer_form.html', {'trainer':trainer, 'mode':'edit'}) # Pass mode to the template to indicate it's and edit operation
+
+@admin_required
+def admin_trainer_delete(request, trainer_id):
+    trainer = Trainer.objects.get(id=trainer_id)
+    if request.method == 'POST':
+        trainer.delete() # delete the trainer from the database
+        messages.success(request, 'Trainer deleted successfully!')
+        return redirect('admin_trainers_list') # Redirect to the trainers list after successfull deletion
+    return redirect('admin_trainers_list') # Render a confirmation page before deletion
+
+@admin_required
+def admin_members_list(request):
+    search = request.GET.get('search', '')
+
+    members = MemberProfile.objects.all().select_related('user', 'plan')
+
+    if search:
+        members = members.filter(full_name__icontains=search)
+    return render(request, 'admin_members_list.html', {'members': members, 'search': search})
+
+@admin_required
+def admin_member_add(request):
+    plans = MembershipPlan.objects.all().order_by('duration_months') # Fetch all membership plans to display in the form
+    trainers = Trainer.objects.all().order_by('name') # Fetch all trainers to display in the form
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        full_name = request.POST.get('full_name')
+        mobile = request.POST.get('mobile')
+        age = request.POST.get('age')
+        gender = request.POST.get('gender')
+        address = request.POST.get('address')
+        join_date = request.POST.get('join_date') or timezone.now().date() # Default today's date if not provided 
+        plan_id = request.POST.get('plan_id')
+        trainer_id = request.POST.get('trainer_id')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists. Please choose a different username.')
+            return redirect('admin_member_add')
+
+        user = User.objects.create_user(username=username, password=password, role='MEMBER') # Create a new user with the role of MEMBER
+
+        plan = MembershipPlan.objects.get(id=plan_id) if plan_id else None
+        trainer = Trainer.objects.get(id=trainer_id) if trainer_id else None
+
+        MemberProfile.objects.create(
+            user=user,
+            full_name=full_name,
+            mobile=mobile,
+            age=age,
+            gender=gender,
+            address=address,
+            join_date=join_date,
+            plan=plan,
+            trainer=trainer,
+        )
+        messages.success(request, 'Member added successfully!')
+        return redirect('admin_members_list')
+    return render(request, 'admin_member_form.html', {'plans': plans, 'trainers': trainers, 'mode':'add'}) # pass mdoe to the template to indicate it's an add operation
+
+@admin_required
+def admin_member_edit(request, member_id):
+    member = MemberProfile.objects.get(id=member_id)
+
+    plans = MembershipPlan.objects.all().order_by('duration_months')
+    trainers = Trainer.objects.all().order_by('name')
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name')
+        mobile = request.POST.get('mobile')
+        age = request.POST.get('age')
+        gender = request.POST.get('gender')
+        address = request.POST.get('address')
+        join_date = request.POST.get('join_date') or member.join_date
+
+        plan_id = request.POST.get('plan_id')
+        trainer_id = request.POST.get('trainer_id')
+
+        plan = MembershipPlan.objects.get(id=plan_id) if plan_id else None
+        trainer = Trainer.objects.get(id=trainer_id) if trainer_id else None
+
+        if full_name and mobile and age and gender and address and join_date:
+
+            member.full_name = full_name
+            member.mobile = mobile
+            member.age = age
+            member.gender = gender
+            member.address = address
+            member.join_date = join_date
+            member.plan = plan
+            member.trainer = trainer
+
+            member.save()
+
+            messages.success(
+                request,
+                'Member updated successfully!'
+            )
+
+            return redirect('admin_members_list')
+
+        else:
+            messages.error(
+                request,
+                'Please fill in all the required fields.'
+            )
+
+    return render(
+        request,
+        'admin_member_form.html',
+        {
+            'member': member,
+            'plans': plans,
+            'trainers': trainers,
+            'mode': 'edit'
+        }
+    )
+
+@admin_required
+def admin_member_delete(request, member_id):
+    member = MemberProfile.objects.get(id=member_id)
+    if request.method == 'POST':
+        user = member.user # get the associated user
+        user.delete() # delete the user, which will also delete the associated memberprofile due
+        member.delete() # delete the member profile from the database
+        messages.success(request, 'Member deleted successfully!')
+        return redirect('admin_members_list')
+    return redirect('admin_members_list')
+
+@admin_required
+def admin_attendance_list(request):
+    attendances = Attendance.objects.all().select_related('member') 
+    return render(request, 'admin_attendance_list.html', {'attendances': attendances})
+
+@admin_required
+def admin_attendance_add(request):
+    members = MemberProfile.objects.all().order_by('full_name') 
+
+    if request.method == 'POST':
+        member_id = request.POST.get('member_id')
+        date = request.POST.get('date') or timezone.now().date() # Default today's date if not provided
+        time_in = request.POST.get('time_in')
+
+        member = MemberProfile.objects.get(id=member_id) if member_id else None
+
+        if not member_id:
+            messages.error(request, "Please select a member.")
+            return redirect('admin_attendance_add') 
+
+        member = MemberProfile.objects.get(id=member_id) 
+
+        attendance, created = Attendance.objects.get_or_create(
+            member=member, date=date, time_in=time_in)
+
+        if not created:
+            attendance.time_in = time_in
+            attendance.save()
+            messages.info(request, "Attendance updated successfully!")
+            messages.success(request, 'Attendance recorded successfully!')
+            return redirect('admin_attendance_form.html', {'members': member})
+
+@admin_required
+def admin_equipment_list(request):
+    equipments = Equipment.objects.all().order_by('name') 
+    return render(request, 'admin_equipment_list.html', {'equipments': equipments})
+
+@admin_required
+def admin_equipment_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        units = request.POST.get('units')
+        price = request.POST.get('price')
+        purchase_date = request.POST.get('purchase_date') or timezone.now().date() # Default today's date if not provided
+
+        if name and units and price:
+            Equipment.objects.create(
+                name=name,
+                units=units,
+                price=price,
+                purchase_date=purchase_date
+            )
+            messages.success(request, 'Equipment added successfully!')
+            return redirect('admin_equipment_list.html') 
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
+
+    return render(request, 'admin_equipment_form.html', {'mode': 'add'})
+                        
+                   

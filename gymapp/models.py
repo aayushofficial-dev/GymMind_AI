@@ -8,10 +8,10 @@ from django.conf import settings # Import settings to access AUTH_USER_MODEL
 
 class User(AbstractUser):
     # custom user model extending AbstractUser
-    ROLE_CHOICES = (
+    ROLE_CHOICES = [
         ('ADMIN', 'Admin'),
         ('MEMBER', 'Member'),
-    )
+    ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='MEMBER')
 
     def __str__(self):
