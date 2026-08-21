@@ -26,10 +26,10 @@ urlpatterns = [
 
     path('admin_attendance/', admin_attendance_list, name='admin_attendance_list'),
     path('admin_attendance_add/', admin_attendance_add, name='admin_attendance_add'),
+   
     path('admin_equipment/', admin_equipment_list, name='admin_equipment_list'),
     path('admin_equipment_add/', admin_equipment_add, name='admin_equipment_add'),
     path('admin_equipment_edit/<int:equipment_id>/', admin_equipment_edit, name='admin_equipment_edit'),
     path('admin_equipment_delete/<int:equipment_id>/', admin_equipment_delete, name='admin_equipment_delete'),
 
-
-]
+    ]

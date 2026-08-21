@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Equipment
 
 from gymapp.models import *
 
@@ -337,32 +338,68 @@ def admin_attendance_add(request):
             messages.info(request, "Attendance updated successfully!")
             messages.success(request, 'Attendance recorded successfully!')
             return redirect('admin_attendance_form.html', {'members': member})
+        
+@admin_required
+def admin_equipment_list(request):
+    equipments = Equipment.objects.filter(is_active=True).order_by('-purchase_date')
 
-        @admin_required
-        def admin_equipment_list(request):
-            equipments = Equipment.objects.all().order_by('name') 
-            return render(request, 'admin_equipment_list.html', {'equipments': equipments})
+    search = request.GET.get('search', '')
 
-        @admin_required
-        def admin_equipment_add(request):
-            if request.method == 'POST':
-                name = request.POST.get('name')
-                units = request.POST.get('units')
-                price = request.POST.get('price')
-                purchase_date = request.POST.get('purchase_date') or timezone.now().date() # Default today's date if not provided
+    if search:
+        equipments = equipments.filter(name__icontains=search)
 
-                if name and units and price:
-                    Equipment.objects.create(
-                        name=name,
-                        units=units,
-                        price=price,
-                        purchase_date=purchase_date
-                    )
-                    messages.success(request, 'Equipment added successfully!')
-                    return redirect('admin_equipment_list.html') 
-                else:
-                    messages.error(request, 'Please fill in all the required fields.')
+    return render(request, 'admin_equipment_list.html', {
+        'equipments': equipments,
+        'search': search,
+    })
 
-            return render(request, 'admin_equipment_form.html', {'mode': 'add'})
+
+@admin_required
+def admin_equipment_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        units = request.POST.get('units')
+        price = request.POST.get('price')
+        purchase_date = request.POST.get('purchase_date')
+
+        Equipment.objects.create(
+            name=name,
+            units=units,
+            price=price,
+            purchase_date=purchase_date
+        )
+
+        return redirect('admin_equipment_list')
+    success_message = "Equipment added successfully!"
+
+    return render(request, 'admin_equipment_form.html', {'success_message': success_message})
+
+@admin_required
+def admin_equipment_edit(request, equipment_id):
+    equipment = get_object_or_404(Equipment, id=equipment_id)
+
+    if request.method == 'POST':
+        equipment.name = request.POST.get('name')
+        equipment.units = request.POST.get('units')
+        equipment.price = request.POST.get('price')
+        equipment.purchase_date = request.POST.get('purchase_date')
+
+        equipment.save()
+
+        return redirect('admin_equipment_list')
+
+    return render(request, 'admin_equipment_edit.html', {
+        'equipment': equipment
+    })
+
+@admin_required
+def admin_equipment_delete(request, equipment_id):
+    equipment = get_object_or_404(Equipment, id=equipment_id)
+
+    if request.method == 'POST':
+        equipment.is_active = False
+        equipment.save()
+
+    return redirect('admin_equipment_list')
                         
                    
