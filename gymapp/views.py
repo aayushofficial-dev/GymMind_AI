@@ -365,4 +365,34 @@ def admin_equipment_add(request):
 
     return render(request, 'admin_equipment_form.html', {'mode': 'add'})
                         
-                   
+@admin_required 
+def admin_equipment_edit(request, equipment_id):
+    equipment = Equipment.objects.get(id=equipment_id) 
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        units = request.POST.get('units')
+        price = request.POST.get('price')
+        purchase_date = request.POST.get('purchase_date') or equipment.purchase_date
+
+        if name and units and price:
+            equipment.name = name
+            equipment.units = units
+            equipment.price = price
+            equipment.purchase_date = purchase_date
+            equipment.save() 
+            messages.success(request, 'Equipment updated successfully!')
+            return redirect('admin_equipment_list') 
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
+
+    return render(request, 'admin_equipment_form.html', {'equipment': equipment, 'mode': 'edit'})
+
+@admin_required
+def admin_equipment_delete(request, equipment_id):
+    equipment = Equipment.objects.get(id=equipment_id) 
+    if request.method == 'POST':
+        equipment.delete() 
+        messages.success(request, 'Equipment deleted successfully!')
+        return redirect('admin_equipment_list') 
+    return redirect('admin_equipment_list') + ""
