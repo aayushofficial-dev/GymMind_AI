@@ -314,7 +314,6 @@ def admin_attendance_list(request):
 def admin_attendance_add(request):
     members = MemberProfile.objects.all().order_by('full_name') 
 
-
     if request.method == 'POST':
         member_id = request.POST.get('member_id')
         date = request.POST.get('date') or timezone.now().date() # Default today's date if not provided
@@ -336,33 +335,33 @@ def admin_attendance_add(request):
             attendance.save()
             messages.info(request, "Attendance updated successfully!")
             messages.success(request, 'Attendance recorded successfully!')
-            return redirect('admin_attendance_form.html', {'members': member})
+            return redirect('admin_attendance_form.html', {'members': members})
 
-        @admin_required
-        def admin_equipment_list(request):
-            equipments = Equipment.objects.all().order_by('name') 
-            return render(request, 'admin_equipment_list.html', {'equipments': equipments})
+@admin_required
+def admin_equipment_list(request):
+    equipments = Equipment.objects.all().order_by('name') 
+    return render(request, 'admin_equipment_list.html', {'equipments': equipments})
 
-        @admin_required
-        def admin_equipment_add(request):
-            if request.method == 'POST':
-                name = request.POST.get('name')
-                units = request.POST.get('units')
-                price = request.POST.get('price')
-                purchase_date = request.POST.get('purchase_date') or timezone.now().date() # Default today's date if not provided
+@admin_required
+def admin_equipment_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        units = request.POST.get('units')
+        price = request.POST.get('price')
+        purchase_date = request.POST.get('purchase_date') or timezone.now().date() # Default today's date if not provided
 
-                if name and units and price:
-                    Equipment.objects.create(
-                        name=name,
-                        units=units,
-                        price=price,
-                        purchase_date=purchase_date
-                    )
-                    messages.success(request, 'Equipment added successfully!')
-                    return redirect('admin_equipment_list.html') 
-                else:
-                    messages.error(request, 'Please fill in all the required fields.')
+        if name and units and price:
+            Equipment.objects.create(
+            name=name,
+            units=units,
+            price=price,
+            purchase_date=purchase_date
+            )
+            messages.success(request, 'Equipment added successfully!')
+            return redirect('admin_equipment_list.html') 
+        else:
+            messages.error(request, 'Please fill in all the required fields.')
 
-            return render(request, 'admin_equipment_form.html', {'mode': 'add'})
+    return render(request, 'admin_equipment_form.html', {'mode': 'add'})
                         
                    
