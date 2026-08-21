@@ -308,35 +308,48 @@ def admin_member_delete(request, member_id):
 
 @admin_required
 def admin_attendance_list(request):
-    attendances = Attendance.objects.all().select_related('member') 
-    return render(request, 'admin_attendance_list.html', {'attendances': attendances})
+    today = timezone.now().date()
+
+    date = request.GET.get('date', today)
+
+    attendances = Attendance.objects.all().select_related('member').filter(date=date)
+    members = MemberProfile.objects.all().order_by('full_name')
+    member_id = request.GET.get('member_id')
+
+    if member_id:
+        attendances = attendances.filter(member_id=member_id)
+    return render(request, 'admin_attendance_list.html', {'attendances' : attendances, 
+                                                          'members': members,
+                                                          'today' : today,
+                                                          'selected_member_id' : member_id,
+                                                          'selected_date': date,
+                                                          })
 
 @admin_required
 def admin_attendance_add(request):
-    members = MemberProfile.objects.all().order_by('full_name') 
+    members = MemberProfile.objects.all().order_by('full_name')
 
     if request.method == 'POST':
         member_id = request.POST.get('member_id')
-        date = request.POST.get('date') or timezone.now().date() # Default today's date if not provided
+        date = request.POST.get('date')
         time_in = request.POST.get('time_in')
 
-        member = MemberProfile.objects.get(id=member_id) if member_id else None
-
         if not member_id:
-            messages.error(request, "Please select a member.")
-            return redirect('admin_attendance_add') 
+            messages.error(request, 'Please select a member.')
+            return redirect('admin_attendance_add')
 
-        member = MemberProfile.objects.get(id=member_id) 
+        member = MemberProfile.objects.get(id=member_id)
 
         attendance, created = Attendance.objects.get_or_create(
-            member=member, date=date, time_in=time_in)
+            member=member, date=date, time_in=time_in
+        )
 
         if not created:
             attendance.time_in = time_in
             attendance.save()
-            messages.info(request, "Attendance updated successfully!")
-            messages.success(request, 'Attendance recorded successfully!')
-            return redirect('admin_attendance_form.html', {'members': member})
+            messages.info(request, "Attendance updated successfully.")
+        messages.success(request, 'Attendance recorded succesfully.')
+    return render(request, 'admin_attendance_form.html', {'members' : members})
 
 @admin_required
 def admin_equipment_list(request):
@@ -387,4 +400,14 @@ def admin_equipment_edit(request, equipment_id):
             messages.error(request, 'Please fill in all the required fields.')
 
     return render(request, 'admin_equipment_form.html', {'equipment': equipment, 'mode': 'edit'}) # pass mode to the template to indicate it's an edit operation
+
+@admin_required
+def admin_equipment_delete(request, equipment_id):
+    equipment = Equipment.objects.get(id=equipment_id)
+
+    if request.method == 'POST':
+        equipment.delete() # delete the equipment from the database
+        messages.success(request, 'Equipment deleted successfully')
+        return redirect('admin_equipment_list')
+    return redirect('admin_equipment_list')
 

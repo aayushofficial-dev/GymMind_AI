@@ -32,7 +32,7 @@
         {% for member in members %}
         <tr>
             <td>{{ forloop.counter }}</td>
-            <td>{{ member.name }}</td>
+            <td>{{ member.full_name }}</td>
             <td>{{ member.user.username }}</td>
             <td>{{ member.mobile }}</td>
             <td>{{ member.plan.name|default:"No Plan Assigned" }}</td>
