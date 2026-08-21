@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Equipment
 
 from gymapp.models import *
 
@@ -335,7 +336,7 @@ def admin_attendance_add(request):
             attendance.save()
             messages.info(request, "Attendance updated successfully!")
             messages.success(request, 'Attendance recorded successfully!')
-            return redirect('admin_attendance_form.html', {'members': members})
+            return redirect('admin_attendance_form.html', {'members': member})
 
 @admin_required
 def admin_equipment_list(request):
@@ -352,10 +353,10 @@ def admin_equipment_add(request):
 
         if name and units and price:
             Equipment.objects.create(
-            name=name,
-            units=units,
-            price=price,
-            purchase_date=purchase_date
+                name=name,
+                units=units,
+                price=price,
+                purchase_date=purchase_date
             )
             messages.success(request, 'Equipment added successfully!')
             return redirect('admin_equipment_list.html') 
