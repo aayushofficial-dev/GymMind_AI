@@ -364,7 +364,11 @@ def admin_equipment_add(request):
             messages.error(request, 'Please fill in all the required fields.')
 
     return render(request, 'admin_equipment_form.html', {'mode': 'add'})
+<<<<<<< HEAD
 
+=======
+                        
+>>>>>>> b84c8d065ac1a59201555e4e6c9429afaa3ef890
 @admin_required 
 def admin_equipment_edit(request, equipment_id):
     equipment = Equipment.objects.get(id=equipment_id) 
@@ -386,4 +390,17 @@ def admin_equipment_edit(request, equipment_id):
         else:
             messages.error(request, 'Please fill in all the required fields.')
 
+<<<<<<< HEAD
     return render(request, 'admin_equipment_form.html', {'equipment': equipment, 'mode': 'edit'}) # pass mode to the template to indicate it's an edit operation
+=======
+    return render(request, 'admin_equipment_form.html', {'equipment': equipment, 'mode': 'edit'})
+
+@admin_required
+def admin_equipment_delete(request, equipment_id):
+    equipment = Equipment.objects.get(id=equipment_id) 
+    if request.method == 'POST':
+        equipment.delete() 
+        messages.success(request, 'Equipment deleted successfully!')
+        return redirect('admin_equipment_list') 
+    return redirect('admin_equipment_list') + ""
+>>>>>>> b84c8d065ac1a59201555e4e6c9429afaa3ef890
