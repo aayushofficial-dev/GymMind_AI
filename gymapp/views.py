@@ -619,4 +619,86 @@ def admin_workout_plan_delete(request, plan_id):
 
     return redirect('admin_workout_plans_list')
 
+@admin_required
+def admin_payments_list(request):
+    member_id = request.GET.get("member_id")
+    status = request.GET.get("status")
+    payments = Payment.objects.select_related('member').order_by('-payment_date')
 
+    if member_id:
+        payments = payments.filter(member__id=member_id)
+    if status in ['PENDING', 'COMPLETED', 'FAILED']:
+        payments = payments.filter(status=status)
+
+    members = MemberProfile.objects.all().order_by('full_name')
+
+    return render(
+        request,
+        'admin_payments_list.html',
+        {
+            'payments': payments,
+            "members": members,
+            "selected_member_id": member_id,
+            "selected_status": status
+        }
+    )
+
+@admin_required
+def admin_payment_add(request):
+    members = MemberProfile.objects.all().order_by('full_name')
+    plans = MembershipPlan.objects.all().order_by('duration_months')
+
+    if request.method == 'POST':
+        member_id = request.POST.get('member_id')
+        plan_id = request.POST.get('plan_id')
+        amount = request.POST.get('amount')
+        payment_date = request.POST.get('payment_date') or timezone.now().date()
+        mode = request.POST.get('mode')
+        status = request.POST.get('status')
+        notes = request.POST.get('notes')
+
+        set_membership = request.POST.get('set_membership')
+        membership_start = request.POST.get('membership_start')
+
+        if not member_id or not plan_id or not amount or not status:
+            messages.error(request, 'Please fill in all the required fields.')
+            return redirect('admin_payment_add')
+
+        member = MemberProfile.objects.get(id=member_id)
+        plan = MembershipPlan.objects.get(id=plan_id)
+
+        #overpayment check
+        if plan and plan.fee:
+            total_paid = Payment.objects.filter(member=member, plan=plan, status='PAID').aggregate(total=models.Sum('amount'))['total'] or 0
+            if total_paid + float(amount) > plan.fee:
+                remaining_amount = plan.fee - total_paid
+                messages.error(request, 'Payment exceeds the plan fee. Please check the amount.')
+                return redirect('admin_payment_add')
+
+
+        Payment.objects.create(
+            member=member,
+            plan=plan,
+            amount=amount,
+            payment_date=payment_date,
+            mode=mode,
+            status=status,
+            notes=notes
+        )
+
+        if set_membership == 'on':
+            member.plan = plan
+            member.membership_start = membership_start 
+            member.membership_end = membership_start + timezone.timedelta(days=plan.duration_months * 30)  # Approximate end date
+            member.save()
+
+        messages.success(request, 'Payment added successfully!')
+        return redirect('admin_payments_list')
+
+    return render(
+        request,
+        'admin_payment_form.html',
+        {
+            'members': members
+        }
+    )
