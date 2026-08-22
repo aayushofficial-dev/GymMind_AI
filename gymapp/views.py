@@ -552,11 +552,6 @@ def admin_enquiry_update_status(request, enquiry_id):
 
     return redirect('admin_enquiries_list')
 
-
-# @admin_required
-# def admin_workout_plans_list(request):
-#     pass
-
 @admin_required
 def admin_payments_list(request):
     member_id = request.GET.get("member_id")
