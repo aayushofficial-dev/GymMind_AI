@@ -33,11 +33,11 @@ urlpatterns = [
     path('admin_equipment_delete/<int:equipment_id>/', admin_equipment_delete, name='admin_equipment_delete'),
 
     path('admin_enquiries_list/', admin_enquiries_list, name='admin_enquiries_list'),
-    path('admin_enquiries_update/<int:enquiry_id>/', admin_enquiry_update_status, name='admin_enquiry_update_status'),
+    path('admin_enquiries_list/<int:enquiry_id>/', admin_enquiry_update_status, name='admin_enquiry_update_status'),
 
-    # workout
+    path('admin_workout_plans/', admin_workout_plans_list, name='admin_workout_plans_list'),
+    path('admin_workout_plan_add/', admin_workout_plan_add, name='admin_workout_plan_add'),
+    path('admin_workout_plans_delete/<int:plan_id>/', admin_workout_plan_delete, name='admin_workout_plan_delete'),
 
-    # payment
-    path('admin_payments/', admin_payments_list, name='admin_payments_list'),
-    path('admin_payment_add/', admin_payment_add, name='admin_payment_add'),
+   
 ]

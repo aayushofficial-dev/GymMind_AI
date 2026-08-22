@@ -543,7 +543,7 @@ def admin_enquiries_list(request):
 def admin_enquiry_update_status(request, enquiry_id):
     if request.method == 'POST':
         status = request.POST.get('status')
-        enquiry = get_object_or_404(Enquiry, id=enquiry_id)
+        enquiry = Enquiry.objects.get(id=enquiry_id)
 
         if status in ['NEW', 'SEEN', 'RESOLVED']:
             enquiry.status = status
@@ -554,118 +554,69 @@ def admin_enquiry_update_status(request, enquiry_id):
 
 
 @admin_required
-def admin_payments_list(request):
-    member_id = request.GET.get('member_id')
-    status = request.GET.get('status')
+def admin_workout_plans_list(request):
+    member_id = request.GET.get("member_id", "")
 
-    payments = Payment.objects.select_related(
-        'member',
-        'plan'
-    ).all().order_by('-payment_date')
+    workout_plans = WorkoutPlan.objects.select_related("member").order_by("-created_at")
 
     if member_id:
-        payments = payments.filter(member__id=member_id)
+        workout_plans = workout_plans.filter(member_id=member_id)
 
-    if status in ['PENDING', 'PAID']:
-        payments = payments.filter(status=status)
-
-    members = MemberProfile.objects.all().order_by('full_name')
+    members = MemberProfile.objects.all().order_by("full_name")
 
     return render(
         request,
-        'admin_payments_list.html',
+        "admin_workout_plans_list.html",
         {
-            'payments': payments,
-            'members': members,
-            'selected_member_id': member_id,
-            'selected_status': status
+            "workout_plans": workout_plans,
+            "members": members,
+            "selected_member_id": member_id
         }
     )
 
-
 @admin_required
-def admin_payment_add(request):
+def admin_workout_plan_add(request):
     members = MemberProfile.objects.all().order_by('full_name')
-    plans = MembershipPlan.objects.all().order_by('duration_months')
 
     if request.method == 'POST':
         member_id = request.POST.get('member_id')
-        plan_id = request.POST.get('plan_id')
-        amount = request.POST.get('amount')
-        payment_date = request.POST.get('payment_date') or timezone.now().date()
-        mode = request.POST.get('mode')
-        status = request.POST.get('status')
-        notes = request.POST.get('notes')
+        title = request.POST.get('title')
+        description = request.POST.get('description')
 
-        set_membership = request.POST.get('set_membership')
-        membership_start = request.POST.get('membership_start')
+        if not member_id or not title or not description:
+            messages.error(request, 'Please fill in all the required fields.')
+            return redirect('admin_workout_plan_add')
 
-        if not member_id or not plan_id or not amount or not payment_date or not mode or not status:
-            messages.error(request, 'Please fill in all required fields.')
-            return redirect('admin_payment_add')
+        member = MemberProfile.objects.get(id=member_id)
 
-        member = get_object_or_404(MemberProfile, id=member_id)
-        plan = get_object_or_404(MembershipPlan, id=plan_id)
-
-        if plan and plan.fee:
-            total_paid = Payment.objects.filter(
-                member=member,
-                plan=plan,
-                status='PAID'
-            ).aggregate(
-                total=Sum('amount')
-            )['total'] or 0
-
-            if float(total_paid) + float(amount) > float(plan.fee):
-                remaining_amount = float(plan.fee) - float(total_paid)
-
-                messages.error(
-                    request,
-                    f'Total paid amount exceeds the plan fee of {plan.fee}. '
-                    f'Remaining amount: {remaining_amount}. Please check the amount.'
-                )
-
-                return redirect('admin_payment_add')
-
-        Payment.objects.create(
+        WorkoutPlan.objects.create(
             member=member,
-            plan=plan,
-            amount=amount,
-            status=status,
-            payment_date=payment_date,
-            mode=mode,
-            notes=notes
+            title=title,
+            description=description,
         )
 
-        if set_membership == 'on' and plan and membership_start:
-            try:
-                membership_start = timezone.datetime.strptime(
-                    membership_start,
-                    '%Y-%m-%d'
-                ).date()
-            except ValueError:
-                messages.error(
-                    request,
-                    'Invalid membership start date format. Please use YYYY-MM-DD.'
-                )
-                return redirect('admin_payment_add')
-
-            member.plan = plan
-            member.membership_start = membership_start
-            member.membership_end = (
-                member.membership_start +
-                timedelta(days=plan.duration_months * 30)
-            )
-            member.save()
-
-        messages.success(request, 'Payment recorded successfully!')
-        return redirect('admin_payments_list')
+        messages.success(request, 'Workout plan added successfully!')
+        return redirect('admin_workout_plans_list')
 
     return render(
         request,
-        'admin_payment_form.html',
+        'admin_workout_plan_form.html',
         {
-            'members': members,
-            'plans': plans
+            'members': members
         }
     )
+
+
+
+@admin_required
+def admin_workout_plan_delete(request, plan_id):
+    workout_plan = get_object_or_404(WorkoutPlan, id=plan_id)
+
+    if request.method == 'POST':
+        workout_plan.delete()
+        messages.success(request, 'Workout plan deleted successfully!')
+        return redirect('admin_workout_plans_list')
+
+    return redirect('admin_workout_plans_list')
+
+

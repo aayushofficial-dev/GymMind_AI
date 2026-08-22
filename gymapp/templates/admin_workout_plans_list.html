@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Workout / Diet Plans</h2>
+    <a href="{% url 'admin_workout_plan_add' %}" class="btn btn-primary">
+        Add Workout Plan
+    </a>
+</div>
+
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-5">
+        <label class="form-label">Member</label>
+        <select name="member_id" class="form-select">
+            <option value="">All Members</option>
+
+            {% for member in members %}
+                <option value="{{ member.id }}"
+                    {% if member.id|stringformat:"s" == selected_member_id %}
+                        selected
+                    {% endif %}
+                >
+                    {{ member.full_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-secondary w-100">
+            Filter
+        </button>
+    </div>
+</form>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Member</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Created At</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for plan in workout_plans %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ plan.member.full_name }}</td>
+                <td>{{ plan.title }}</td>
+                <td>{{ plan.description }}</td>
+                <td>{{ plan.created_at|date:"F d, Y" }}</td>
+                <td>
+                    <form method="post" action="{% url 'admin_workout_plan_delete' plan.id %}" onsubmit="return confirm('Are you sure you want to delete this workout plan?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger btn-sm">
+        Delete
+    </button>
+</form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">
+                    No workout plans found.
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
