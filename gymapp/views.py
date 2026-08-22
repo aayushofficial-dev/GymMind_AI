@@ -553,71 +553,9 @@ def admin_enquiry_update_status(request, enquiry_id):
     return redirect('admin_enquiries_list')
 
 
-@admin_required
-def admin_workout_plans_list(request):
-    member_id = request.GET.get("member_id", "")
-
-    workout_plans = WorkoutPlan.objects.select_related("member").order_by("-created_at")
-
-    if member_id:
-        workout_plans = workout_plans.filter(member_id=member_id)
-
-    members = MemberProfile.objects.all().order_by("full_name")
-
-    return render(
-        request,
-        "admin_workout_plans_list.html",
-        {
-            "workout_plans": workout_plans,
-            "members": members,
-            "selected_member_id": member_id
-        }
-    )
-
-@admin_required
-def admin_workout_plan_add(request):
-    members = MemberProfile.objects.all().order_by('full_name')
-
-    if request.method == 'POST':
-        member_id = request.POST.get('member_id')
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-
-        if not member_id or not title or not description:
-            messages.error(request, 'Please fill in all the required fields.')
-            return redirect('admin_workout_plan_add')
-
-        member = MemberProfile.objects.get(id=member_id)
-
-        WorkoutPlan.objects.create(
-            member=member,
-            title=title,
-            description=description,
-        )
-
-        messages.success(request, 'Workout plan added successfully!')
-        return redirect('admin_workout_plans_list')
-
-    return render(
-        request,
-        'admin_workout_plan_form.html',
-        {
-            'members': members
-        }
-    )
-
-
-
-@admin_required
-def admin_workout_plan_delete(request, plan_id):
-    workout_plan = get_object_or_404(WorkoutPlan, id=plan_id)
-
-    if request.method == 'POST':
-        workout_plan.delete()
-        messages.success(request, 'Workout plan deleted successfully!')
-        return redirect('admin_workout_plans_list')
-
-    return redirect('admin_workout_plans_list')
+# @admin_required
+# def admin_workout_plans_list(request):
+#     pass
 
 @admin_required
 def admin_payments_list(request):

@@ -35,10 +35,6 @@ urlpatterns = [
     path('admin_enquiries_list/', admin_enquiries_list, name='admin_enquiries_list'),
     path('admin_enquiries_list/<int:enquiry_id>/', admin_enquiry_update_status, name='admin_enquiry_update_status'),
 
-    path('admin_workout_plans/', admin_workout_plans_list, name='admin_workout_plans_list'),
-    path('admin_workout_plan_add/', admin_workout_plan_add, name='admin_workout_plan_add'),
-    path('admin_workout_plans_delete/<int:plan_id>/', admin_workout_plan_delete, name='admin_workout_plan_delete'),
-
-   path('admin_payments_list/', admin_payments_list, name='admin_payments_list'),
-   path('admin_payments_add/', admin_payment_add, name='admin_payment_add'),
+    path('admin_payments_list/', admin_payments_list, name='admin_payments_list'),
+    path('admin_payments_add/', admin_payment_add, name='admin_payment_add'),
 ]
