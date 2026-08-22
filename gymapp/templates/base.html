@@ -21,7 +21,7 @@
          {% if user.role == 'ADMIN'%}
          <!-- Admin-specific links -->
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'home' %}">Dashboard</a>
+            <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin_members_list' %}">Members</a>
@@ -50,9 +50,6 @@
             <a class="nav-link" href="{% url 'admin_enquiries_list' %}">Enquires</a>
           </li>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'home' %}">Workout Plans</a>
-          </li>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'home' %}">Feedback</a>
@@ -60,7 +57,7 @@
          {% elif user.role == 'MEMBER' %}
          <!-- Member-specific links -->
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'home' %}">Dashboard</a>
+            <a class="nav-link" href="{% url 'member_dashboard' %}">Dashboard</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'home' %}">My Profile</a>
@@ -95,7 +92,7 @@
           <a class="nav-link" href="{% url 'admin_login' %}">Admin Login</a>
         </li>
          <li class="nav-item">
-          <a class="nav-link" href="{% url 'about' %}">Member Login</a>
+          <a class="nav-link" href="{% url 'member_login' %}">Member Login</a>
         </li>
         {% endif %}
       </ul>

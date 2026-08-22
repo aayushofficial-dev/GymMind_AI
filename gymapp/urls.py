@@ -37,4 +37,7 @@ urlpatterns = [
 
     path('admin_payments_list/', admin_payments_list, name='admin_payments_list'),
     path('admin_payments_add/', admin_payment_add, name='admin_payment_add'),
+
+    path('member-login/', member_login_view, name='member_login'),
+    path('member_dashboard/', member_dashboard_view, name='member_dashboard'),
 ]
