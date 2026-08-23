@@ -456,23 +456,34 @@ def admin_enquiry_update_status(request, enquiry_id):
 def admin_payments_list(request):
     member_id = request.GET.get('member_id')
     status = request.GET.get('status')
+
     payments = Payment.objects.select_related('member', 'plan').all().order_by('-payment_date')
+
     if member_id:
         payments = payments.filter(member__id=member_id)
+
     if status in ['PENDING', 'PAID']:
         payments = payments.filter(status=status)
 
     members = MemberProfile.objects.all().order_by('full_name')
-    return render(request, 'admin_payments_list.html', {'payments':payments, 
-                                                        'members':members, 
-                                                        'selected_member_id': member_id, 
-                                                        'selected_status': status
-                                                        })
+
+    return render(
+        request,
+        'admin_payments_list.html',
+        {
+            'payments': payments,
+            'members': members,
+            'selected_member_id': member_id,
+            'selected_status': status
+        }
+    )
+
 
 @admin_required
 def admin_payment_add(request):
     members = MemberProfile.objects.all().order_by('full_name')
     plans = MembershipPlan.objects.all().order_by('duration_months')
+
     if request.method == 'POST':
         member_id = request.POST.get('member_id')
         plan_id = request.POST.get('plan_id')
@@ -482,7 +493,7 @@ def admin_payment_add(request):
         status = request.POST.get('status')
         notes = request.POST.get('notes')
 
-        set_membership = request.POST.get('set_membership') 
+        set_membership = request.POST.get('set_membership')
         membership_start = request.POST.get('membership_start')
 
         if not member_id or not plan_id or not amount or not payment_date or not mode or not status:
@@ -492,37 +503,61 @@ def admin_payment_add(request):
         member = MemberProfile.objects.get(id=member_id)
         plan = MembershipPlan.objects.get(id=plan_id)
 
-        # overpayment check
         if plan and plan.fee:
             total_paid = Payment.objects.filter(
-                member=member, plan=plan, status='PAID'
-            ).aggregate(total=models.Sum('amount'))['total'] or 0
-            if float(total_paid) + float(amount) > plan.fee:
-                remaining_amount = plan.fee - total_paid
-                messages.error(request, f'Total paid amount exceeds the plan fee of {plan.fee}. Remaining amount: {remaining_amount}. Please check the amount.')
+                member=member,
+                plan=plan,
+                status='PAID'
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            if float(total_paid) + float(amount) > float(plan.fee):
+                remaining_amount = float(plan.fee) - float(total_paid)
+
+                messages.error(
+                    request,
+                    f'Payment exceeds the plan fee. Remaining amount: {remaining_amount}.'
+                )
+
                 return redirect('admin_payment_add')
 
         Payment.objects.create(
             member=member,
             plan=plan,
             amount=amount,
-            status=status,
             payment_date=payment_date,
             mode=mode,
-            notes=notes,
+            status=status,
+            notes=notes
         )
+
         if set_membership == 'on' and plan and membership_start:
             try:
-                membership_start = timezone.datetime.strptime(membership_start, '%Y-%m-%d').date()
+                membership_start = timezone.datetime.strptime(
+                    membership_start,
+                    '%Y-%m-%d'
+                ).date()
             except ValueError:
-                messages.error(request, 'Invalid membersip start date format. Please use YYYY-MM-DD')
+                messages.error(
+                    request,
+                    'Invalid membership start date format. Please use YYYY-MM-DD.'
+                )
                 return redirect('admin_payment_add')
+
             member.plan = plan
             member.membership_start = membership_start
-            member.membership_end = member.membership_start + timedelta(days=plan.duration_months*30)
+            member.membership_end = membership_start + timedelta(
+                days=plan.duration_months * 30
+            )
             member.save()
 
         messages.success(request, 'Payment recorded successfully!')
         return redirect('admin_payments_list')
-    return render(request, 'admin_payment_form.html', {'members': members, 'plans':plans})
 
+    return render(
+        request,
+        'admin_payment_form.html',
+        {
+            'members': members,
+            'plans': plans
+        }
+    )

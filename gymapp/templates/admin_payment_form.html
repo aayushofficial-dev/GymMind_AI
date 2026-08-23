@@ -2,86 +2,175 @@
 
 {% block content %}
 
-<h2>
-    Record Payment
-</h2>
+<div class="container-fluid payment-container">
 
-<form method="post" class="row g-3 w-75">
-{% csrf_token %}
-    <div class="col-md-6">
-    <label for="member_id" class="form-label">Members</label>
-   <select name="member_id" class="form-select" required>
-    <option value="">Select Member</option>
-    {% for member in members %}
-        <option value="{{ member.id }}">
-            {{ member.full_name }} ({{ member.user.username }})
-        </option>
-    {% endfor %}
-   </select>
-   </div>
+    <h1>Record Payment</h1>
 
-   <div class="col-md-6">
-    <label class="form-label">Plan</label>
-    <select name="plan_id" class="form-select">
-        <option value="">Select Plan</option>
-        {% for plan in plans %}
-        <option value="{{ plan.id }}">
-            {{ plan.name}}
-        </option>
-        {% endfor %}
-    </select>
-   </div>
+    <form method="POST">
+        {% csrf_token %}
 
-   <div class="col-md-3">
-    <label class="form-label">Amount</label>
-    <input type="number" name="amount" class="form-control" step="0.01" placeholder="Enter amount" required>
-   </div>
+        <div class="row g-4">
 
-   <div class="col-md-3">
-    <label class="form-label">Payment date</label>
-    <input type="date" name="payment_date" class="form-control" required>
-   </div>
+            <div class="col-md-6">
+                <label for="member_id" class="form-label">
+                    Member <span class="required">*</span>
+                </label>
 
-   <div class="col-md-3">
-    <label class="form-label">Mode</label>
-    <select name="mode" class="form-select" required>
-        <option value="">Select Mode</option>
-        <option value="CASH">Cash</option>
-        <option value="ONLINE">Online</option>
-    </select>
-   </div>
+                <select name="member_id" id="member_id" class="form-select" required>
+                    <option value="">Select Member</option>
 
-   <div class="col-md-3">
-    <label class="form-label">Status</label>
-    <select name="status" class="form-select" required>
-        <option value="">Select Status</option>
-        <option value="PAID">Paid</option>
-        <option value="PENDING">Pending</option>
-    </select>
-   </div>
+                    {% for member in members %}
+                        <option value="{{ member.id }}">
+                            {{ member.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-   <div class="col-md-12">
-    <label class="form-label">Notes</label>
-    <textarea name="notes" class="form-control" rows="2" placeholder="Enter any additional notes"></textarea>
-   </div>
+            <div class="col-md-6">
+                <label for="plan_id" class="form-label">
+                    Plan <span class="required">*</span>
+                </label>
 
-   <div class="col-md-12 border rounded p-3">
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" name="set_membership" id="set_membership">
-        <label class="form-check-label" for="set_membership">
-            Also update member's membership start/end date using this plan
-        </label>
-    </div>
-    <div class="mt-2">
-        <label class="form-label">Membership Start Date</label>
-        <input type="date" name="membership_start" class="form-control">
-        <small>End date will be calculated as start date + plan duration x 30 days(approx)</small>
-    </div>
-   </div>
-   <div class="col-md-12">
-    <button type="submit" class="btn btn-primary">Save Payment</button>
-    <a href="{% url 'admin_payments_list' %}" class="btn btn-secondary">Cancel</a>
-   </div>
-</form>
+                <select name="plan_id" id="plan_id" class="form-select" required>
+                    <option value="">Select Plan</option>
 
+                    {% for plan in plans %}
+                        <option value="{{ plan.id }}">
+                            {{ plan.name }} - {{ plan.duration_months }} months - ${{ plan.fee }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="amount" class="form-label">
+                    Amount <span class="required">*</span>
+                </label>
+
+                <input
+                    type="number"
+                    name="amount"
+                    id="amount"
+                    class="form-control"
+                    step="0.01"
+                    min="0"
+                    required
+                >
+            </div>
+
+            <div class="col-md-3">
+                <label for="payment_date" class="form-label">
+                    Payment Date
+                </label>
+
+                <input
+                    type="date"
+                    name="payment_date"
+                    id="payment_date"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-md-3">
+                <label for="mode" class="form-label">
+                    Mode
+                </label>
+
+                <select name="mode" id="mode" class="form-select">
+                    <option value="CASH">Cash</option>
+                    <option value="ONLINE">Online</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="status" class="form-label">
+                    Status
+                </label>
+
+                <select name="status" id="status" class="form-select">
+                    <option value="PAID">Paid</option>
+                    <option value="PENDING">Pending</option>
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label for="notes" class="form-label">
+                    Notes
+                </label>
+
+                <textarea
+                    name="notes"
+                    id="notes"
+                    class="form-control"
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <div class="col-12">
+
+                <div class="membership-box">
+
+                    <div class="form-check membership-check">
+                        <input
+                            type="checkbox"
+                            name="set_membership"
+                            id="set_membership"
+                            class="form-check-input"
+                        >
+
+                        <label
+                            for="set_membership"
+                            class="form-check-label"
+                        >
+                            Also update member's membership start/end using this plan
+                        </label>
+                    </div>
+
+                    <div class="membership-date">
+
+                        <label
+                            for="membership_start"
+                            class="form-label"
+                        >
+                            Membership Start Date
+                        </label>
+
+                        <input
+                            type="date"
+                            name="membership_start"
+                            id="membership_start"
+                            class="form-control"
+                        >
+
+                        <div class="form-text">
+                            End date will be calculated as start date + plan duration × 30 days (approx).
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="form-buttons">
+
+            <button type="submit" class="btn btn-primary">
+                Save Payment
+            </button>
+
+            <a
+                href="{% url 'admin_payments_list' %}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
 {% endblock %}
