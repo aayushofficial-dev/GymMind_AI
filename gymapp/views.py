@@ -5,9 +5,9 @@ from gymapp.models import *
 from django.contrib import messages
 from datetime import timedelta
 from django.utils import timezone
-import json
-from django.conf import settings
-from django.http import JsonResponse
+# import json
+# from django.conf import settings
+# from django.http import JsonResponse
 from django.db.models import Sum
 
 # Create your views here.
@@ -92,6 +92,7 @@ def member_login_view(request):
 @member_required
 def member_dashboard_view(request):
     return render(request, 'member_dashboard.html')
+
 @admin_required
 def admin_dashboard_view(request):
     total_members = MemberProfile.objects.all().count()
