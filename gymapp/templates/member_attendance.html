@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h2 class="mb-3">My Attendance</h2>
+
+<form method="get" class="row g-3 mb-4">
+
+    <div class="col-md-4">
+        <label for="date" class="form-label">Date</label>
+
+        <input
+            type="date"
+            name="date"
+            id="date"
+            class="form-control"
+            value="{{ selected_date }}"
+        >
+    </div>
+
+    <div class="col-md-4">
+        <label for="member_id" class="form-label">Member</label>
+
+        <select name="member_id" id="member_id" class="form-select">
+            <option value="">All Members</option>
+
+            {% for member in members %}
+                <option
+                    value="{{ member.id }}"
+                    {% if member.id|stringformat:"s" == selected_member_id %}selected{% endif %}
+                >
+                    {{ member.full_name }} ({{ member.user.username }})
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-secondary w-100">
+            Filter
+        </button>
+    </div>
+
+</form>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Member</th>
+            <th>Date</th>
+            <th>Time In</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for attendance in attendances %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+
+                <td>
+                    {{ attendance.member.full_name }}
+                </td>
+
+                <td>
+                    {{ attendance.date|date:"F d, Y" }}
+                </td>
+
+                <td>
+                    {% if attendance.time_in %}
+                        {{ attendance.time_in|time:"g:i a" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">
+                    No attendance records found.
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

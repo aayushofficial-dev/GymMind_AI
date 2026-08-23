@@ -8,6 +8,7 @@ from django.utils import timezone
 import json
 from django.conf import settings
 from django.http import JsonResponse
+from django.db.models import Sum
 
 # Create your views here.
 def home(request):
@@ -83,7 +84,7 @@ def member_login_view(request):
         if user is not None and getattr(user, 'role', None) == 'MEMBER':  # Check if the user is a member
             login(request, user) # log the user in using Django's built-in login function
             messages.success(request, 'Logged in successfully!.')
-            return redirect('member_dashboard')  # Redirect to the admin dashboard
+            return redirect('member_dashboard')  # Redirect to the member dashboard
         else:
             messages.error(request, 'Invalid credentials or not a member')
     return render(request, 'member_login.html')
@@ -561,3 +562,9 @@ def admin_payment_add(request):
             'plans': plans
         }
     )
+
+@member_required
+def member_attendance(request):
+    member_profile = MemberProfile.objects.get(user=request.user)
+    attendances = Attendance.objects.filter(member=member_profile).order_by('-date')
+    return render(request, 'member_attendance.html', {'attendances': attendances})
