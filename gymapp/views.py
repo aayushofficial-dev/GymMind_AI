@@ -568,3 +568,44 @@ def member_attendance(request):
     member_profile = MemberProfile.objects.get(user=request.user)
     attendances = Attendance.objects.filter(member=member_profile).order_by('-date')
     return render(request, 'member_attendance.html', {'attendances': attendances})
+
+@member_required
+def member_membership(request):
+    member = request.user.member_profile
+
+    days_remaining = None
+    membership_status = 'No Membership'
+    total_paid = 0
+    remaining = None
+
+    if member.membership_start and member.membership_end:
+        days_remaining = (member.membership_end - timezone.now().date()).days
+
+        if days_remaining < 0:
+            days_remaining = 0
+            membership_status = 'Membership Ended'
+        else:
+            membership_status = 'Active'
+
+    if member.plan:
+        agg = Payment.objects.filter(
+            member=member,
+            plan=member.plan,
+            status='PAID'
+        ).aggregate(total=Sum('amount'))
+
+        total_paid = agg['total'] or 0
+        remaining = float(member.plan.fee) - float(total_paid)
+
+        if remaining < 0:
+            remaining = 0
+
+    context = {
+        'member': member,
+        'membership_status': membership_status,
+        'days_remaining': days_remaining,
+        'total_paid': total_paid,
+        'remaining': remaining,
+    }
+
+    return render(request, 'member_membership.html', context)

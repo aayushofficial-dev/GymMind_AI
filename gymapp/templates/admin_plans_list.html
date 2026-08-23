@@ -24,7 +24,7 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ plan.name }}</td>
             <td>{{ plan.duration_months}}</td>
-            <td>{{ plan.fee }}</td>
+            <td>₹ {{ plan.fee }}</td>
             <td>{{ plan.description|default:"No Description" }}</td>
             <td>
                 <a href="{% url 'admin_plan_edit' plan.id %}" class="btn btn-sm btn-warning">Edit</a>

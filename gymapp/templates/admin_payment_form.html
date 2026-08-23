@@ -37,7 +37,7 @@
 
                     {% for plan in plans %}
                         <option value="{{ plan.id }}">
-                            {{ plan.name }} - {{ plan.duration_months }} months - ${{ plan.fee }}
+                            {{ plan.name }} - {{ plan.duration_months }} months - ₹ {{ plan.fee }}
                         </option>
                     {% endfor %}
                 </select>
