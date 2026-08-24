@@ -563,6 +563,25 @@ def admin_payment_add(request):
         }
     )
 
+
+@admin_required
+def admin_feedback_list(request):
+    members = MemberProfile.objects.all().order_by('full_name')
+
+    feedbacks = Feedback.objects.select_related('member').order_by('-created_at')
+
+    member_id = request.GET.get('member')
+
+    if member_id:
+        feedbacks = feedbacks.filter(member_id=member_id)
+
+    return render(request, 'admin_feedback_list.html', {
+        'members': members,
+        'feedbacks': feedbacks,
+        'selected_member': member_id,
+    })
+
+
 @member_required
 def member_attendance(request):
     member_profile = MemberProfile.objects.get(user=request.user)
@@ -662,3 +681,68 @@ def member_change_password(request):
         return redirect("member_login")
 
     return render(request, "member_change_password.html")
+
+@member_required
+def member_payments(request):
+    member = get_object_or_404(MemberProfile, user=request.user)
+
+    payments = Payment.objects.filter(
+        member=member
+    ).select_related("plan").order_by("-payment_date")
+
+    total_paid = payments.filter(
+        status="PAID"
+    ).aggregate(total=Sum("amount"))["total"] or 0
+
+    return render(request, "member_payments.html", {
+        "member": member,
+        "payments": payments,
+        "total_paid": total_paid,
+    })
+
+@member_required
+def member_feedback(request):
+    member = get_object_or_404(MemberProfile, user=request.user)
+
+    if request.method == 'POST':
+        message = request.POST.get('message', '').strip()
+
+        if not message:
+            messages.error(request, 'Please enter your feedback.')
+            return redirect('member_feedback')
+
+        Feedback.objects.create(
+            member=member,
+            message=message
+        )
+
+        messages.success(request, 'Your feedback has been submitted successfully!')
+        return redirect('member_feedback')
+
+    feedbacks = Feedback.objects.filter(
+        member=member
+    ).order_by('-created_at')
+
+    return render(request, 'member_feedback_list.html', {
+        'member': member,
+        'feedbacks': feedbacks,
+    })
+
+
+
+
+
+
+@member_required
+def member_workout_plans(request):
+    member = get_object_or_404(MemberProfile, user=request.user)
+
+    workout_plans = WorkoutPlan.objects.filter(
+        member=member
+    ).order_by("-created_at")
+
+    return render(request, "member_workout_plans.html", {
+        "member": member,
+        "workout_plans": workout_plans,
+    })
+

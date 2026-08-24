@@ -37,6 +37,7 @@ urlpatterns = [
 
     path('admin_payments_list/', admin_payments_list, name='admin_payments_list'),
     path('admin_payments_add/', admin_payment_add, name='admin_payment_add'),
+    path("admin_feedback_list/",admin_feedback_list, name="admin_feedback_list"),
 
     path('member-login/', member_login_view, name='member_login'),
     path('member_dashboard/', member_dashboard_view, name='member_dashboard'),
@@ -45,5 +46,8 @@ urlpatterns = [
     path('member_profile/', member_profile, name='member_profile'),
     path('member_profile_edit/', member_profile_edit, name='member_profile_edit'),
     path('member_change_password/',member_change_password, name='member_change_password'),
+    path("member_payments/", member_payments, name="member_payments"),
+    path("member_feedback/", member_feedback, name="member_feedback"),
+    path("member_workout_plans/", member_workout_plans, name="member_workout_plans"),
 
 ]
