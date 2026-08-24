@@ -43,5 +43,11 @@ urlpatterns = [
     path('member_attendance/', member_attendance, name='member_attendance'),
     path('member_membership/', member_membership, name='member_membership'),
 
+    path('member_profile/', member_profile, name='member_profile'),
+    path('member_profile_edit/', member_profile_edit, name='member_profile_edit'),
+    path('member_change_password/', member_change_password, name='member_change_password'),
+
+    path('member_feedback/', member_feedback, name='member_feedback'),
+    path('admin_feedbacks_list/', admin_feedbacks_list, name='admin_feedbacks_list')
 
 ]
