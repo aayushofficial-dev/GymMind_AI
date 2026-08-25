@@ -48,6 +48,7 @@ urlpatterns = [
     path('member_change_password/',member_change_password, name='member_change_password'),
     path("member_payments/", member_payments, name="member_payments"),
     path("member_feedback/", member_feedback, name="member_feedback"),
+    
     path("member_workout_plans/", member_workout_plans, name="member_workout_plans"),
 
 ]
