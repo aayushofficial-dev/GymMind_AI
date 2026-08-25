@@ -7,7 +7,7 @@ from datetime import timedelta
 from django.utils import timezone
 import json
 from django.conf import settings
-# from django.http import JsonResponse
+from django.http import JsonResponse
 import requests
 from django.db.models import Sum
 
@@ -92,7 +92,28 @@ def member_login_view(request):
 
 @member_required
 def member_dashboard_view(request):
-    return render(request, 'member_dashboard.html')
+    member = request.user.member_profile
+    total_attendance = member.attendances.count()
+    total_payments = member.payments.count()
+    return render(request, 'member_dashboard.html', {
+        'member':member,
+        'total_attendance':total_attendance,
+        'total_payments':total_payments,
+    })
+
+@member_required
+def member_feedback(request):
+    member = request.user.member_profile
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            Feedback.objects.create(member=member, message=message)
+            messages.success(request, "Your Feedback has been submitted successfully!")
+            return redirect('member_feedback')
+        else:
+            messages.error(request, 'Please enter your feedback before submitting.')
+    feedbacks = member.feedbacks.all().order_by('-created_at')
+    return render(request, 'member_feedback.html', {'feedbacks':feedbacks})
 
 @admin_required
 def admin_dashboard_view(request):
@@ -565,6 +586,25 @@ def admin_payment_add(request):
         }
     )
 
+
+@admin_required
+def admin_feedback_list(request):
+    members = MemberProfile.objects.all().order_by('full_name')
+
+    feedbacks = Feedback.objects.select_related('member').order_by('-created_at')
+
+    member_id = request.GET.get('member')
+
+    if member_id:
+        feedbacks = feedbacks.filter(member_id=member_id)
+
+    return render(request, 'admin_feedback_list.html', {
+        'members': members,
+        'feedbacks': feedbacks,
+        'selected_member': member_id,
+    })
+
+
 @member_required
 def member_attendance(request):
     member_profile = MemberProfile.objects.get(user=request.user)
@@ -692,6 +732,7 @@ Only use bodyweight or common gym equipment. Keep the JSON valid and parseable."
 
     return {'success': True, 'plan': plan, 'raw_text': raw_text, 'error': None}
 
+
 @admin_required
 def ai_workout_suggestion(request):
     members = MemberProfile.objects.all().order_by('full_name')
@@ -736,6 +777,7 @@ def ai_workout_suggestion(request):
 
     return render(request, 'ai_workout_suggestion.html', {'plan': plan, 'members': members})
 
+
 @member_required
 def member_ai_workout_suggestion(request):
     member = request.user.member_profile
@@ -775,8 +817,60 @@ def member_ai_workout_suggestion(request):
             messages.success(request, 'Your workout plan has been generated and saved.')
 
     return render(request, 'ai_workout_suggestion.html', {'plan': plan})
+
+
+@member_required
+def member_profile(request):
+    member = request.user.member_profile
+    return render(request, 'member_profile.html', {'member': member})
+
+
+@member_required
+def member_payments(request):
+    member_profile = MemberProfile.objects.get(user=request.user)
+    payments = Payment.objects.filter(member=member_profile).select_related('plan')
+    return render(request, 'member_payments.html', {'payments': payments})
+
+
+@member_required
+def member_profile_edit(request):
+    member = request.user.member_profile
+    if request.method == 'POST':
+        member.full_name = request.POST.get('full_name')
+        member.mobile = request.POST.get('mobile')
+        member.age = request.POST.get('age')
+        member.gender = request.POST.get('gender')
+        member.address = request.POST.get('address')
+        member.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('member_profile')
+    return render(request, 'member_profile_edit.html', {'member': member})
+
+
+@member_required
+def member_change_password(request):
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if not request.user.check_password(current_password):
+            messages.error(request, 'Current password is incorrect.')
+            return redirect('member_change_password')
+
+        if new_password != confirm_password:
+            messages.error(request, 'New password and confirm password do not match.')
+            return redirect('member_change_password')
+
+        request.user.set_password(new_password)
+        request.user.save()
+        messages.success(request, 'Password changed successfully! Please log in again.')
+        return redirect('member_login')
+    return render(request, 'member_change_password.html')
+
+
 @member_required
 def member_workout_plans(request):
-    member = request.user.member_profile
+    member = get_object_or_404(MemberProfile, user=request.user)
     plans = WorkoutPlan.objects.filter(member=member).order_by('-created_at')
-    return render(request, 'member_workout_plans.html', {'plans': plans})
+    return render(request, 'member_workout_plans.html', {'plans': plans, 'member': member})
