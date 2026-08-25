@@ -135,18 +135,7 @@ class Enquiry(models.Model):
     def __str__(self):
         return f"Enuiqry from {self.name} - {self.email} - Status: {self.status}"
 
-class WorkoutPlan(models.Model):
-    member = models.ForeignKey(
-        MemberProfile,
-        on_delete=models.CASCADE,
-        related_name='workout_plans'
-    )
-    title = models.CharField(max_length=100) # title of the workout plans
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.title} - Created at: {self.created_at}"
 
 class Feedback(models.Model):
     member = models.ForeignKey(
@@ -159,3 +148,25 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"Feedback from {self.member.full_name} - Created at: {self.created_at}"
+
+class WorkoutPlan(models.Model):
+    LEVEL_CHOICES = (
+        ('BEGINNER', 'Beginner'),
+        ('INTERMEDIATE', 'Intermediate'),
+        ('ADVANCED', 'Advanced'),
+    )
+
+    member = models.ForeignKey(
+        MemberProfile,
+        on_delete=models.CASCADE,
+        related_name='workout_plans'
+    )
+    title = models.CharField(max_length=100) # title of the workout plans
+    description = models.TextField(blank=True)
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, blank=True)
+    body_part = models.CharField(max_length=100, blank=True)
+    is_ai_generated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} - Created at: {self.created_at}"

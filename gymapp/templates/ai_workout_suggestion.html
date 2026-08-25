@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <i class="fas fa-robot"></i> AI Workout Planner
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if members %}
+                    <div class="mb-3">
+                        <label for="member_id" class="form-label">Member</label>
+                        <select class="form-select" id="member_id" name="member_id" required>
+                            <option value="" selected disabled>Select a member</option>
+                            {% for member in members %}
+                            <option value="{{ member.id }}">{{ member.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="level" class="form-label">Fitness Level</label>
+                        <select class="form-select" id="level" name="level" required>
+                            <option value="" selected disabled>Select level</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="body_part" class="form-label">Body Part / Focus Area</label>
+                        <input type="text" class="form-control" id="body_part" name="body_part"
+                               placeholder="e.g. chest, legs, back, full body" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100">
+                        <i class="fas fa-dumbbell"></i> Generate Workout Plan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        {% if plan %}
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-clipboard-list"></i>
+                    {{ plan.level|title }} - {{ plan.body_part|title }}
+                </span>
+            </div>
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase small">Warm-up</h6>
+                <p>{{ plan.warm_up }}</p>
+
+                <h6 class="text-muted text-uppercase small mt-4">Exercises</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Exercise</th>
+                                <th>Sets</th>
+                                <th>Reps</th>
+                                <th>Rest</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exercise in plan.exercises %}
+                            <tr>
+                                <td>{{ exercise.name }}</td>
+                                <td>{{ exercise.sets }}</td>
+                                <td>{{ exercise.reps }}</td>
+                                <td>{{ exercise.rest_seconds }}s</td>
+                                <td class="small text-muted">{{ exercise.notes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="text-muted text-uppercase small mt-4">Cool-down</h6>
+                <p>{{ plan.cool_down }}</p>
+
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <strong>Safety notes:</strong> {{ plan.safety_notes }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center text-muted py-5">
+                <i class="fas fa-dumbbell fa-2x mb-3"></i>
+                <p class="mb-0">Fill in the form to generate an AI workout plan.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-clipboard-list"></i> My Workout Plans</h2>
+
+{% if plans %}
+<div class="accordion" id="workoutPlansAccordion">
+    {% for plan in plans %}
+    <div class="accordion-item mb-2">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#plan{{ plan.id }}">
+                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                    <span>
+                        <strong>{{ plan.title }}</strong>
+                        {% if plan.is_ai_generated %}
+                        <span class="badge bg-dark ms-2"><i class="fas fa-robot"></i> AI Generated</span>
+                        {% endif %}
+                    </span>
+                    <small class="text-muted">{{ plan.created_at|date:"M d, Y" }}</small>
+                </div>
+            </button>
+        </h2>
+        <div id="plan{{ plan.id }}" class="accordion-collapse collapse"
+             data-bs-parent="#workoutPlansAccordion">
+            <div class="accordion-body">
+                {% if plan.level or plan.body_part %}
+                <p class="mb-2">
+                    {% if plan.level %}<span class="badge bg-secondary">{{ plan.level|title }}</span>{% endif %}
+                    {% if plan.body_part %}<span class="badge bg-info text-dark">{{ plan.body_part|title }}</span>{% endif %}
+                </p>
+                {% endif %}
+                <div style="white-space: pre-line;">{{ plan.description }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center text-muted py-5">
+        <i class="fas fa-clipboard-list fa-2x mb-3"></i>
+        <p class="mb-3">You don't have any workout plans yet.</p>
+        <a href="{% url 'member_ai_workout' %}" class="btn btn-dark">
+            <i class="fas fa-robot"></i> Generate an AI Workout Plan
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

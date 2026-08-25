@@ -19,41 +19,37 @@
       <ul class="navbar-nav ms-auto">
         {% if user.is_authenticated %}
          {% if user.role == 'ADMIN'%}
-         <!-- Admin-specific links -->
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_members_list' %}">Members</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_plans_list' %}">Plans</a>
-          </li>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_trainers_list' %}">Trainers</a>
-          </li>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_payments_list' %}">Payments</a>
-          </li>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_attendance_list' %}">Attendance</a>
-          </li>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_equipment_list' %}">Equipment</a>
-          </li>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_enquiries_list' %}">Enquires</a>
-          </li>
-          </li>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'home' %}">Feedback</a>
-          </li>
+<!-- Admin-specific links -->
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_members_list' %}">Members</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_plans_list' %}">Plans</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_trainers_list' %}">Trainers</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_payments_list' %}">Payments</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_attendance_list' %}">Attendance</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'ai_workout_suggestion' %}">AI Workout</a>
+      </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_equipment_list' %}">Equipment</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'admin_enquiries_list' %}">Enquires</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'home' %}">Feedback</a>
+    </li>
          {% elif user.role == 'MEMBER' %}
          <!-- Member-specific links -->
           <li class="nav-item">
@@ -68,14 +64,15 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'member_attendance' %}">My Attendance</a>
           </li>
+          
           <li class="nav-item">
             <a class="nav-link" href="{% url 'home' %}">My Payments</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'home' %}">AI Workout Planner</a>
+            <a class="nav-link" href="{% url 'member_ai_workout' %}">AI Workout Planner</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'home' %}">My Workout Plans</a>
+            <a class="nav-link" href="{% url 'member_workout_plans' %}">My Workout Plans</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'home' %}">My Feedback</a>

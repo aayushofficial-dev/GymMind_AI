@@ -41,7 +41,9 @@ urlpatterns = [
     path('member-login/', member_login_view, name='member_login'),
     path('member_dashboard/', member_dashboard_view, name='member_dashboard'),
     path('member_attendance/', member_attendance, name='member_attendance'),
+    path('ai_workout_suggestion/', ai_workout_suggestion, name='ai_workout_suggestion'),
     path('member_membership/', member_membership, name='member_membership'),
-
-
+    path('member_ai_workout/', member_ai_workout_suggestion, name='member_ai_workout'),
+    path('member_workout_plans/', member_workout_plans, name='member_workout_plans'),
 ]
+
