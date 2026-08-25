@@ -137,7 +137,6 @@
 
     </style>
 </head>
-
 <body class="
 {% if user.is_authenticated and user.role == 'ADMIN' %}role-admin
 {% elif user.is_authenticated and user.role == 'MEMBER' %}role-member
@@ -202,6 +201,12 @@
                         </li>
 
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ai_workout_suggestion' %}">
+                                <i class="fa-solid fa-robot me-2"></i>AI Workout
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'admin_equipment_list' %}">
                                 <i class="fa-solid fa-screwdriver-wrench me-2"></i>Equipment
                             </a>
@@ -251,7 +256,9 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                          <a class="nav-link" href="{% url 'home' %}">AI Workout Planner</a>
+                            <a class="nav-link" href="{% url 'member_ai_workout' %}">
+                                <i class="fa-solid fa-robot me-2"></i>AI Workout Planner
+                            </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'member_workout_plans' %}">

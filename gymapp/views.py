@@ -8,6 +8,7 @@ from django.utils import timezone
 import json
 from django.conf import settings
 from django.http import JsonResponse
+import requests
 from django.db.models import Sum
 
 # Create your views here.
@@ -651,22 +652,185 @@ def member_membership(request):
 
     return render(request, 'member_membership.html', context)
 
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+VALID_WORKOUT_LEVELS = {"beginner", "intermediate", "advanced"}
+
+
+def generate_ai_workout_plan(level, body_part):
+    level = (level or '').strip().lower()
+    body_part = (body_part or '').strip()
+
+    if level not in VALID_WORKOUT_LEVELS:
+        return {'success': False, 'plan': None, 'raw_text': None,
+                'error': "Level must be one of: beginner, intermediate, advanced."}
+
+    if not body_part:
+        return {'success': False, 'plan': None, 'raw_text': None,
+                'error': "Please specify a body part or focus area (e.g. 'chest', 'legs', 'full body')."}
+
+    api_key = getattr(settings, 'OPENROUTER_API_KEY', None)
+    if not api_key:
+        return {'success': False, 'plan': None, 'raw_text': None,
+                'error': "AI workout suggestions are not configured. Please contact the administrator."}
+
+    model = getattr(settings, 'OPENROUTER_MODEL', 'openrouter/free')
+
+    prompt = f"""You are a certified personal trainer. Create a single workout
+session (not a weekly split) for a {level} level trainee focused on: {body_part}.
+
+Return ONLY valid JSON, no markdown fences, no commentary, matching exactly:
+{{
+  "level": "{level}",
+  "body_part": "{body_part}",
+  "warm_up": "1-2 sentence warm-up",
+  "exercises": [
+    {{"name": "exercise name", "sets": integer, "reps": "e.g. '8-12' or '30 seconds'",
+      "rest_seconds": integer, "notes": "form cue or modification, 1 sentence"}}
+  ],
+  "cool_down": "1-2 sentence cool-down",
+  "safety_notes": "1-2 sentences of safety advice for this level"
+}}
+
+Beginner: 4-5 exercises, focus on form. Intermediate: 5-6 exercises, moderate
+intensity. Advanced: 6-8 exercises, higher intensity, may include supersets.
+Only use bodyweight or common gym equipment. Keep the JSON valid and parseable."""
+
+    try:
+        response = requests.post(
+            OPENROUTER_URL,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'model': model,
+                'messages': [{'role': 'user', 'content': prompt}],
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+        raw_text = data['choices'][0]['message']['content'].strip()
+    except requests.exceptions.RequestException as exc:
+        return {'success': False, 'plan': None, 'raw_text': None,
+                'error': f"Error contacting AI service: {exc}"}
+    except (KeyError, IndexError):
+        return {'success': False, 'plan': None, 'raw_text': None,
+                'error': "AI service returned an unexpected response."}
+
+    cleaned = raw_text
+    if cleaned.startswith('```'):
+        cleaned = cleaned.strip('`')
+        if cleaned.lower().startswith('json'):
+            cleaned = cleaned[4:].strip()
+
+    try:
+        plan = json.loads(cleaned)
+    except (json.JSONDecodeError, TypeError):
+        return {'success': False, 'plan': None, 'raw_text': raw_text,
+                'error': "AI returned an unexpected format. Showing raw suggestion instead."}
+
+    return {'success': True, 'plan': plan, 'raw_text': raw_text, 'error': None}
+
+
+@admin_required
+def ai_workout_suggestion(request):
+    members = MemberProfile.objects.all().order_by('full_name')
+    plan = None
+
+    if request.method == 'POST':
+        member_id = request.POST.get('member_id')
+        level = request.POST.get('level')
+        body_part = request.POST.get('body_part')
+
+        result = generate_ai_workout_plan(level, body_part)
+
+        if not result['success']:
+            messages.error(request, result['error'])
+        else:
+            plan = result['plan']
+
+            if member_id:
+                member = MemberProfile.objects.get(id=member_id)
+
+                exercises_text = "\n".join(
+                    f"- {ex.get('name')}: {ex.get('sets')} sets x {ex.get('reps')} "
+                    f"(rest {ex.get('rest_seconds')}s) - {ex.get('notes', '')}"
+                    for ex in plan.get('exercises', [])
+                )
+                description = (
+                    f"Warm-up: {plan.get('warm_up', '')}\n\n"
+                    f"Exercises:\n{exercises_text}\n\n"
+                    f"Cool-down: {plan.get('cool_down', '')}\n\n"
+                    f"Safety notes: {plan.get('safety_notes', '')}"
+                )
+
+                WorkoutPlan.objects.create(
+                    member=member,
+                    title=f"AI Plan: {level.title()} - {body_part.title()}",
+                    description=description,
+                    level=level.upper(),
+                    body_part=body_part,
+                    is_ai_generated=True,
+                )
+                messages.success(request, f'Workout plan saved for {member.full_name}.')
+
+    return render(request, 'ai_workout_suggestion.html', {'plan': plan, 'members': members})
+
+
+@member_required
+def member_ai_workout_suggestion(request):
+    member = request.user.member_profile
+    plan = None
+
+    if request.method == 'POST':
+        level = request.POST.get('level')
+        body_part = request.POST.get('body_part')
+
+        result = generate_ai_workout_plan(level, body_part)
+
+        if not result['success']:
+            messages.error(request, result['error'])
+        else:
+            plan = result['plan']
+
+            exercises_text = "\n".join(
+                f"- {ex.get('name')}: {ex.get('sets')} sets x {ex.get('reps')} "
+                f"(rest {ex.get('rest_seconds')}s) - {ex.get('notes', '')}"
+                for ex in plan.get('exercises', [])
+            )
+            description = (
+                f"Warm-up: {plan.get('warm_up', '')}\n\n"
+                f"Exercises:\n{exercises_text}\n\n"
+                f"Cool-down: {plan.get('cool_down', '')}\n\n"
+                f"Safety notes: {plan.get('safety_notes', '')}"
+            )
+
+            WorkoutPlan.objects.create(
+                member=member,
+                title=f"AI Plan: {level.title()} - {body_part.title()}",
+                description=description,
+                level=level.upper(),
+                body_part=body_part,
+                is_ai_generated=True,
+            )
+            messages.success(request, 'Your workout plan has been generated and saved.')
+
+    return render(request, 'ai_workout_suggestion.html', {'plan': plan})
+
+
 @member_required
 def member_profile(request):
     member = request.user.member_profile
-    return render(request, "member_profile.html", {"member": member})
+    return render(request, 'member_profile.html', {'member': member})
 
 
 @member_required
 def member_payments(request):
     member_profile = MemberProfile.objects.get(user=request.user)
     payments = Payment.objects.filter(member=member_profile).select_related('plan')
-    return render(request, 'member_payments.html', {'payments':payments})
+    return render(request, 'member_payments.html', {'payments': payments})
 
-@member_required
-def member_profile (request):
-    member = request.user.member_profile
-    return render(request, 'member_profile.html', {'member':member})
 
 @member_required
 def member_profile_edit(request):
@@ -680,7 +844,8 @@ def member_profile_edit(request):
         member.save()
         messages.success(request, 'Profile updated successfully!')
         return redirect('member_profile')
-    return render(request, 'member_profile_edit.html', {'member':member})
+    return render(request, 'member_profile_edit.html', {'member': member})
+
 
 @member_required
 def member_change_password(request):
@@ -703,31 +868,9 @@ def member_change_password(request):
         return redirect('member_login')
     return render(request, 'member_change_password.html')
 
-@admin_required
-def admin_feedbacks_list(request):
-    member_id = request.GET.get('member')
-    feedbacks = Feedback.objects.select_related('member').all().order_by('-created_at')
-    members = MemberProfile.objects.all().order_by('full_name')
-    if member_id:
-        feedbacks = feedbacks.filter(member_id=member_id)
-
-    context = {
-        'feedbacks':feedbacks,
-        'members':members,
-        'selected_members': int(member_id) if member_id else None,
-    }
-    return render(request, 'admin_feedbacks_list.html', context)
 
 @member_required
 def member_workout_plans(request):
     member = get_object_or_404(MemberProfile, user=request.user)
-
-    workout_plans = WorkoutPlan.objects.filter(
-        member=member
-    ).order_by("-created_at")
-
-    return render(request, "member_workout_plans.html", {
-        "member": member,
-        "workout_plans": workout_plans,
-    })
-
+    plans = WorkoutPlan.objects.filter(member=member).order_by('-created_at')
+    return render(request, 'member_workout_plans.html', {'plans': plans, 'member': member})
