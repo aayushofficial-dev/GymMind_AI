@@ -874,3 +874,4 @@ def member_workout_plans(request):
     member = get_object_or_404(MemberProfile, user=request.user)
     plans = WorkoutPlan.objects.filter(member=member).order_by('-created_at')
     return render(request, 'member_workout_plans.html', {'plans': plans, 'member': member})
+
